@@ -11,7 +11,7 @@ if Code.ensure_loaded?(Phoenix.Channels.GenSocketClient.Serializer) do
     @doc false
     def encode_message(message) do
       with {:ok, encoded} <- Msgpax.pack(message) do
-        {:ok, {:text, encoded}}
+        {:ok, {:binary, encoded}}
       end
     end
   end

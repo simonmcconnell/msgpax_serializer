@@ -6,13 +6,13 @@ if Code.ensure_loaded?(Phoenix.Socket.Serializer) do
 
     @impl true
     def fastlane!(%Broadcast{payload: {:binary, data}} = msg) do
-      bin = Msgpax.pack!([nil, nil, msg.topic, msg.event, data], iodata: false)
+      bin = Msgpax.pack!([nil, nil, msg.topic, msg.event, data])
       {:socket_push, :binary, bin}
     end
 
     def fastlane!(%Broadcast{payload: %{}} = msg) do
       bin = Msgpax.pack!([nil, nil, msg.topic, msg.event, msg.payload])
-      {:socket_push, :text, bin}
+      {:socket_push, :binary, bin}
     end
 
     def fastlane!(%Broadcast{payload: invalid}) do
@@ -21,7 +21,7 @@ if Code.ensure_loaded?(Phoenix.Socket.Serializer) do
 
     @impl true
     def encode!(%Reply{payload: {:binary, data}} = reply) do
-      bin = Msgpax.pack!([reply.join_ref, reply.ref, reply.topic, reply.status, data], iodata: false)
+      bin = Msgpax.pack!([reply.join_ref, reply.ref, reply.topic, reply.status, data])
       {:socket_push, :binary, bin}
     end
 
@@ -35,17 +35,17 @@ if Code.ensure_loaded?(Phoenix.Socket.Serializer) do
           %{status: reply.status, response: reply.payload}
         ])
 
-      {:socket_push, :text, bin}
+      {:socket_push, :binary, bin}
     end
 
     def encode!(%Message{payload: {:binary, data}} = msg) do
-      bin = Msgpax.pack!([msg.join_ref, msg.ref, msg.topic, msg.event, data], iodata: false)
+      bin = Msgpax.pack!([msg.join_ref, msg.ref, msg.topic, msg.event, data])
       {:socket_push, :binary, bin}
     end
 
     def encode!(%Message{payload: %{}} = msg) do
       bin = Msgpax.pack!([msg.join_ref, msg.ref, msg.topic, msg.event, msg.payload])
-      {:socket_push, :text, bin}
+      {:socket_push, :binary, bin}
     end
 
     def encode!(%Message{payload: invalid}) do
@@ -53,14 +53,8 @@ if Code.ensure_loaded?(Phoenix.Socket.Serializer) do
     end
 
     @impl true
-    def decode!(raw_message, opts) do
+    def decode!(raw_message, _opts) do
       [join_ref, ref, topic, event, payload | _] = Msgpax.unpack!(raw_message)
-
-      payload =
-        case Keyword.fetch(opts, :opcode) do
-          {:ok, :text} -> payload
-          {:ok, :binary} -> {:binary, payload}
-        end
 
       %Message{
         topic: topic,
